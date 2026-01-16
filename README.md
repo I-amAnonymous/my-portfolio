@@ -5,7 +5,7 @@
 A highly interactive, full-stack portfolio designed for a Cybersecurity and Computer Science student. This project goes beyond a static site, featuring a secure **Admin Control Center** that allows real-time updates to the portfolio content without touching the codebase.
 
 ## ⚡ Live Demo
-**[View the Portfolio Live](https://shafayatur-portfolio.vercel.app/)**
+**[View the Portfolio Live](https://shafayatur-rahman.vercel.app/)**
 
 ---
 
