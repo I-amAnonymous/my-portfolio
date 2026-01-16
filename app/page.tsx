@@ -3,12 +3,12 @@
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 
-// --- 1. THE "HACKER" SCRAMBLE TEXT COMPONENT (Keep this, it's cool) ---
+// --- 1. THE "HACKER" SCRAMBLE TEXT COMPONENT (Binary Edition) ---
 const ScrambleText = () => {
   const [text, setText] = useState("SHAFAYATUR RAHMAN");
   const TARGET_TEXT = "SHAFAYATUR RAHMAN";
   const CYCLES_PER_LETTER = 2;
-  const SHUFFLE_TIME = 40;
+  const SHUFFLE_TIME = 60; // Slower shuffle (was 40)
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -21,7 +21,7 @@ const ScrambleText = () => {
           if (pos / CYCLES_PER_LETTER > index) {
             return char;
           }
-          const randomChars = "诶比西迪伊艾弗吉艾尺艾杰开艾勒马娜系统数据连接!@#$%^&*()";
+          const randomChars = "01";
           return randomChars[Math.floor(Math.random() * randomChars.length)];
         })
         .join("");
@@ -44,7 +44,7 @@ const ScrambleText = () => {
   );
 };
 
-// --- 2. NEW: SMOOTH CINEMATIC ROTATE COMPONENT ---
+// --- 2. SMOOTH CINEMATIC ROTATE COMPONENT (Slower & Smoother) ---
 const SmoothRotate = () => {
   const phrases = [
     "Computer Science Student",
@@ -64,15 +64,17 @@ const SmoothRotate = () => {
     }, 100);
 
     // 2. Trigger Exit Animation (Slide Up + Fade Out)
+    // STAY VISIBLE LONGER: Increased to 4000ms (4 seconds)
     const exitTimer = setTimeout(() => {
       setAnimationClass("opacity-0 -translate-y-4 blur-sm");
-    }, 2500); // Text stays visible for 2.5 seconds
+    }, 4000); 
 
     // 3. Change Text & Reset Position
+    // CYCLE TOTAL TIME: Increased to 5000ms (5 seconds)
     const nextTimer = setTimeout(() => {
       setIndex((prev) => (prev + 1) % phrases.length);
-      setAnimationClass("opacity-0 translate-y-4 blur-sm"); // Reset to bottom
-    }, 3000); // Total cycle duration
+      setAnimationClass("opacity-0 translate-y-4 blur-sm"); 
+    }, 5000); 
 
     return () => {
       clearTimeout(entryTimer);
@@ -82,7 +84,8 @@ const SmoothRotate = () => {
   }, [index]);
 
   return (
-    <span className={`inline-block transition-all duration-700 ease-out transform ${animationClass} text-cyan-400 font-bold`}>
+    // SLOWER MOVEMENT: changed duration-700 to duration-1000
+    <span className={`inline-block transition-all duration-1000 ease-out transform ${animationClass} text-cyan-400 font-bold`}>
       {phrases[index]}
     </span>
   );
@@ -106,7 +109,7 @@ const projects = [
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center p-6 md:p-24 bg-[#0f172a]">
+    <main className="flex min-h-screen flex-col items-center p-6 md:p-24 bg-[#0f172a] overflow-hidden">
       
       {/* --- HERO SECTION --- */}
       <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex mb-24 mt-10">
@@ -147,10 +150,23 @@ export default function Home() {
           </div>
         </div>
         
-        {/* --- PROFILE PICTURE --- */}
-        <div className="hidden lg:block relative lg:w-1/2 flex justify-end">
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-tr from-cyan-500 to-blue-500 blur-[80px] opacity-50 rounded-full"></div>
-           <div className="relative mx-auto h-72 w-72 rounded-full border-4 border-slate-800 bg-slate-800 overflow-hidden shadow-2xl">
+        {/* --- DYNAMIC PROFILE PICTURE SECTION --- */}
+        <div className="hidden lg:block relative lg:w-1/2 flex justify-end items-center">
+           
+           {/* 1. Background Ambience */}
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-cyan-500/30 to-blue-500/30 blur-[60px] rounded-full"></div>
+           
+           {/* 2. The Outer GLOWING Scanner Ring */}
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full border-2 border-cyan-400/60 shadow-[0_0_20px_rgba(34,211,238,0.5)] animate-[spin_10s_linear_infinite]">
+              {/* The glowing dot on the ring */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-cyan-100 rounded-full shadow-[0_0_15px_4px_rgba(34,211,238,0.8)]"></div>
+           </div>
+
+           {/* 3. The Inner Pulsing Ring */}
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[290px] h-[290px] rounded-full border border-blue-500/30 animate-pulse"></div>
+
+           {/* 4. The Actual Image Container */}
+           <div className="relative z-10 mx-auto h-72 w-72 rounded-full border-4 border-slate-800 bg-slate-800 overflow-hidden shadow-2xl">
              <Image 
                src="/profile.jpg" 
                alt="Shafayatur Rahman"
