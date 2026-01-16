@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 // --- UPDATE METADATA HERE ---
 export const metadata: Metadata = {
-  title: "Shafayatur Rahman | CS student| Portfolio",
+  title: "Shafayatur Rahman | CS student",
   description: "Portfolio of Shafayatur Rahman, a Computer Science student at BRAC University specializing in Full Stack Development and Security.",
 };
 
