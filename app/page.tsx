@@ -1,4 +1,4 @@
-"use client"; // This line is crucial for animations
+"use client";
 
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
@@ -7,11 +7,9 @@ import { useState, useEffect, useRef } from "react";
 const ScrambleText = () => {
   const [text, setText] = useState("SHAFAYATUR RAHMAN");
   const TARGET_TEXT = "SHAFAYATUR RAHMAN";
-  const CYCLES_PER_LETTER = 2; // How many scrambles before settling on a letter
-  const SHUFFLE_TIME = 40; // Speed of the shuffle in milliseconds
-  const CHARS = "!@#$%^&*():{};|,.<>/?Zsdfghjklqwertyuiop"; // You can add Chinese chars here if you want: "系统安全数据连接中"
+  const CYCLES_PER_LETTER = 2;
+  const SHUFFLE_TIME = 40;
   
-  // Ref to keep track of the animation interval
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -21,11 +19,9 @@ const ScrambleText = () => {
       const scrambled = TARGET_TEXT.split("")
         .map((char, index) => {
           if (pos / CYCLES_PER_LETTER > index) {
-            return char; // The character is "solved"
+            return char;
           }
-
-          // Return a random Chinese/Symbol character
-          const randomChars = "诶比西迪伊艾弗吉艾尺艾杰开艾勒马娜系统数据连接"; // Mixed Chinese/Symbols
+          const randomChars = "诶比西迪伊艾弗吉艾尺艾杰开艾勒马娜系统数据连接!@#$%^&*()";
           return randomChars[Math.floor(Math.random() * randomChars.length)];
         })
         .join("");
@@ -77,7 +73,6 @@ export default function Home() {
             Available for hire
           </p>
           
-          {/* THE NEW DYNAMIC NAME HEADER */}
           <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-white md:text-6xl min-h-[60px]">
              Hi, I'm <br className="md:hidden" />
              <ScrambleText />
@@ -122,56 +117,22 @@ export default function Home() {
 
       </div>
 
-      {/* --- PROJECTS SECTION --- */}
-      <section id="projects" className="w-full max-w-5xl">
-        <h2 className="mb-12 text-3xl font-bold text-white text-center lg:text-left">
-          Featured Projects
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project, index) => (
-            <a 
-              key={index} 
-              href={project.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group block rounded-xl border border-slate-800 bg-slate-900/50 p-6 hover:bg-slate-800/50 hover:border-cyan-500/50 transition-all duration-300"
-            >
-              <h3 className="mb-2 text-xl font-bold text-slate-100 group-hover:text-cyan-400 transition-colors">
-                {project.title}
-              </h3>
-              <p className="mb-4 text-sm text-slate-400">
-                {project.description}
-              </p>
-              
-              <div className="flex flex-wrap gap-2">
-                {project.techStack.map((tech) => (
-                  <span key={tech} className="text-xs font-medium text-cyan-200 bg-cyan-900/30 px-2 py-1 rounded">
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* --- ABOUT SECTION --- */}
-      <section className="w-full max-w-5xl mt-24 mb-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      {/* --- ABOUT SECTION (Now moved above Projects) --- */}
+      <section className="w-full max-w-5xl mb-24 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         <div>
           <h2 className="text-3xl font-bold text-white mb-6">About Me</h2>
           <div className="space-y-4 text-slate-400 leading-relaxed">
             <p>
               I am a final-year Computer Science student at <strong className="text-cyan-400">BRAC University</strong>, 
-              currently focusing on full-stack web development.
+              passionate about bridging the gap between software development and system security.
             </p>
             <p>
-              My journey started with building simple static sites, but I quickly fell in love with 
-              complex backend logic and database architecture. I enjoy solving real-world problems—
-              whether it's building e-commerce platforms or writing security scripts to detect system intrusions.
+              My journey involves more than just building websites; I focus on understanding the underlying systems. 
+              Whether I am architecting a full-stack e-commerce platform with <strong className="text-white">Next.js</strong> or 
+              writing Python scripts to <strong className="text-white">detect system intrusions</strong>, I enjoy solving complex engineering problems.
             </p>
             <p>
-              When I'm not coding, I'm usually exploring new tech stacks or preparing for my next hackathon.
+              When I'm not coding, I'm usually exploring Linux internals, learning about network security, or preparing for my next hackathon.
             </p>
           </div>
         </div>
@@ -205,6 +166,40 @@ export default function Home() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* --- PROJECTS SECTION --- */}
+      <section id="projects" className="w-full max-w-5xl">
+        <h2 className="mb-12 text-3xl font-bold text-white text-center lg:text-left">
+          Featured Projects
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((project, index) => (
+            <a 
+              key={index} 
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group block rounded-xl border border-slate-800 bg-slate-900/50 p-6 hover:bg-slate-800/50 hover:border-cyan-500/50 transition-all duration-300"
+            >
+              <h3 className="mb-2 text-xl font-bold text-slate-100 group-hover:text-cyan-400 transition-colors">
+                {project.title}
+              </h3>
+              <p className="mb-4 text-sm text-slate-400">
+                {project.description}
+              </p>
+              
+              <div className="flex flex-wrap gap-2">
+                {project.techStack.map((tech) => (
+                  <span key={tech} className="text-xs font-medium text-cyan-200 bg-cyan-900/30 px-2 py-1 rounded">
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </a>
+          ))}
         </div>
       </section>
 
