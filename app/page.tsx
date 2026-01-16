@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 
-// --- 1. THE "HACKER" TEXT COMPONENT ---
+// --- 1. THE "HACKER" SCRAMBLE TEXT COMPONENT (For Name) ---
 const ScrambleText = () => {
   const [text, setText] = useState("SHAFAYATUR RAHMAN");
   const TARGET_TEXT = "SHAFAYATUR RAHMAN";
@@ -44,7 +44,55 @@ const ScrambleText = () => {
   );
 };
 
-// --- 2. THE DATA ---
+// --- 2. THE TYPEWRITER COMPONENT (For Roles) ---
+const Typewriter = () => {
+  const phrases = [
+    "Computer Science Student",
+    "Cybersecurity Enthusiast",
+    "Critical Thinker",
+    "Problem Solver",
+    "Full Stack Developer"
+  ];
+  
+  const [text, setText] = useState("");
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [typingSpeed, setTypingSpeed] = useState(100);
+
+  useEffect(() => {
+    const handleTyping = () => {
+      const currentPhrase = phrases[phraseIndex];
+      
+      if (isDeleting) {
+        setText(currentPhrase.substring(0, text.length - 1));
+        setTypingSpeed(50); 
+      } else {
+        setText(currentPhrase.substring(0, text.length + 1));
+        setTypingSpeed(100); 
+      }
+
+      if (!isDeleting && text === currentPhrase) {
+        setTimeout(() => setIsDeleting(true), 2000); 
+      } 
+      else if (isDeleting && text === "") {
+        setIsDeleting(false);
+        setPhraseIndex((prev) => (prev + 1) % phrases.length);
+      }
+    };
+
+    const timer = setTimeout(handleTyping, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [text, isDeleting, phraseIndex, typingSpeed, phrases]);
+
+  return (
+    <span className="text-cyan-400 font-bold tracking-wide">
+      {text}
+      <span className="animate-pulse text-white ml-1">|</span>
+    </span>
+  );
+};
+
+// --- 3. THE DATA ---
 const projects = [
   {
     title: "Jersey Shop E-Commerce", 
@@ -78,11 +126,13 @@ export default function Home() {
              <ScrambleText />
           </h1>
 
-          <p className="mb-8 text-lg text-slate-400 md:text-xl max-w-2xl">
-            Computer Science Student at BRAC University.
-            <br />
-            Building accessible, pixel-perfect web experiences.
-          </p>
+          {/* DYNAMIC DESCRIPTION SECTION */}
+          <div className="mb-8 text-lg text-slate-400 md:text-xl max-w-2xl min-h-[80px] flex flex-col justify-center lg:block">
+            <p className="mt-2 leading-relaxed">
+               I am a <Typewriter />
+            </p>
+          </div>
+
           <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 justify-center lg:justify-start">
             <a 
               href="#projects" 
@@ -117,7 +167,7 @@ export default function Home() {
 
       </div>
 
-      {/* --- ABOUT SECTION (Now moved above Projects) --- */}
+      {/* --- ABOUT SECTION --- */}
       <section className="w-full max-w-5xl mb-24 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         <div>
           <h2 className="text-3xl font-bold text-white mb-6">About Me</h2>
