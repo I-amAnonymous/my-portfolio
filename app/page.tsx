@@ -1,65 +1,229 @@
+"use client"; // This line is crucial for animations
+
 import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
+
+// --- 1. THE "HACKER" TEXT COMPONENT ---
+const ScrambleText = () => {
+  const [text, setText] = useState("SHAFAYATUR RAHMAN");
+  const TARGET_TEXT = "SHAFAYATUR RAHMAN";
+  const CYCLES_PER_LETTER = 2; // How many scrambles before settling on a letter
+  const SHUFFLE_TIME = 40; // Speed of the shuffle in milliseconds
+  const CHARS = "!@#$%^&*():{};|,.<>/?Zsdfghjklqwertyuiop"; // You can add Chinese chars here if you want: "系统安全数据连接中"
+  
+  // Ref to keep track of the animation interval
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    let pos = 0;
+
+    intervalRef.current = setInterval(() => {
+      const scrambled = TARGET_TEXT.split("")
+        .map((char, index) => {
+          if (pos / CYCLES_PER_LETTER > index) {
+            return char; // The character is "solved"
+          }
+
+          // Return a random Chinese/Symbol character
+          const randomChars = "诶比西迪伊艾弗吉艾尺艾杰开艾勒马娜系统数据连接"; // Mixed Chinese/Symbols
+          return randomChars[Math.floor(Math.random() * randomChars.length)];
+        })
+        .join("");
+
+      setText(scrambled);
+      pos++;
+
+      if (pos >= TARGET_TEXT.length * CYCLES_PER_LETTER) {
+        clearInterval(intervalRef.current!);
+      }
+    }, SHUFFLE_TIME);
+
+    return () => clearInterval(intervalRef.current!);
+  }, []);
+
+  return (
+    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 font-mono">
+      {text}
+    </span>
+  );
+};
+
+// --- 2. THE DATA ---
+const projects = [
+  {
+    title: "Jersey Shop E-Commerce", 
+    description: "A full-stack marketplace featuring a custom Admin Dashboard, coupon system, and real-time inventory management. Built with Supabase for the database and authentication.",
+    techStack: ["Next.js", "Supabase", "PostgreSQL", "Tailwind CSS"], 
+    link: "https://github.com/I-amAnonymous/jersey-shop",
+  },
+  {
+    title: "Python HIDS & Integrity Checker",
+    description: "A Host-based Intrusion Detection System (HIDS) that monitors file integrity in real-time. It detects unauthorized modifications to critical system files using cryptographic hashing.",
+    techStack: ["Python", "Cybersecurity", "File Integrity", "Hashing"],
+    link: "https://github.com/I-amAnonymous/python-hids-integrity",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="flex min-h-screen flex-col items-center p-6 md:p-24 bg-[#0f172a]">
+      
+      {/* --- HERO SECTION --- */}
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex mb-24 mt-10">
+        
+        {/* Text Content */}
+        <div className="text-center lg:text-left lg:w-1/2">
+          <p className="mb-4 inline-block border border-slate-700 bg-slate-800 px-3 py-1 rounded-full text-xs font-semibold text-cyan-400">
+            Available for hire
           </p>
+          
+          {/* THE NEW DYNAMIC NAME HEADER */}
+          <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-white md:text-6xl min-h-[60px]">
+             Hi, I'm <br className="md:hidden" />
+             <ScrambleText />
+          </h1>
+
+          <p className="mb-8 text-lg text-slate-400 md:text-xl max-w-2xl">
+            Computer Science Student at BRAC University.
+            <br />
+            Building accessible, pixel-perfect web experiences.
+          </p>
+          <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 justify-center lg:justify-start">
+            <a 
+              href="#projects" 
+              className="rounded-lg bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition-colors"
+            >
+              View My Work
+            </a>
+            <a 
+              href="https://github.com/I-amAnonymous" 
+              target="_blank"
+              rel="noopener noreferrer" 
+              className="rounded-lg border border-slate-700 bg-slate-800 px-6 py-3 text-white font-medium hover:bg-slate-700 transition-colors"
+            >
+              GitHub Profile
+            </a>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
+        
+        {/* --- PROFILE PICTURE --- */}
+        <div className="hidden lg:block relative lg:w-1/2 flex justify-end">
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-tr from-cyan-500 to-blue-500 blur-[80px] opacity-50 rounded-full"></div>
+           <div className="relative mx-auto h-72 w-72 rounded-full border-4 border-slate-800 bg-slate-800 overflow-hidden shadow-2xl">
+             <Image 
+               src="/profile.jpg" 
+               alt="Shafayatur Rahman"
+               fill
+               className="object-cover"
+               priority
+             />
+           </div>
+        </div>
+
+      </div>
+
+      {/* --- PROJECTS SECTION --- */}
+      <section id="projects" className="w-full max-w-5xl">
+        <h2 className="mb-12 text-3xl font-bold text-white text-center lg:text-left">
+          Featured Projects
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((project, index) => (
+            <a 
+              key={index} 
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group block rounded-xl border border-slate-800 bg-slate-900/50 p-6 hover:bg-slate-800/50 hover:border-cyan-500/50 transition-all duration-300"
+            >
+              <h3 className="mb-2 text-xl font-bold text-slate-100 group-hover:text-cyan-400 transition-colors">
+                {project.title}
+              </h3>
+              <p className="mb-4 text-sm text-slate-400">
+                {project.description}
+              </p>
+              
+              <div className="flex flex-wrap gap-2">
+                {project.techStack.map((tech) => (
+                  <span key={tech} className="text-xs font-medium text-cyan-200 bg-cyan-900/30 px-2 py-1 rounded">
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {/* --- ABOUT SECTION --- */}
+      <section className="w-full max-w-5xl mt-24 mb-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 className="text-3xl font-bold text-white mb-6">About Me</h2>
+          <div className="space-y-4 text-slate-400 leading-relaxed">
+            <p>
+              I am a final-year Computer Science student at <strong className="text-cyan-400">BRAC University</strong>, 
+              currently focusing on full-stack web development.
+            </p>
+            <p>
+              My journey started with building simple static sites, but I quickly fell in love with 
+              complex backend logic and database architecture. I enjoy solving real-world problems—
+              whether it's building e-commerce platforms or writing security scripts to detect system intrusions.
+            </p>
+            <p>
+              When I'm not coding, I'm usually exploring new tech stacks or preparing for my next hackathon.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-6 rounded-xl bg-slate-900 border border-slate-800">
+            <h3 className="text-4xl font-bold text-cyan-400 mb-2">3+</h3>
+            <p className="text-sm text-slate-500">Years Coding</p>
+          </div>
+          <div className="p-6 rounded-xl bg-slate-900 border border-slate-800">
+            <h3 className="text-4xl font-bold text-blue-500 mb-2">5+</h3>
+            <p className="text-sm text-slate-500">Projects Completed</p>
+          </div>
+          <div className="col-span-2 p-6 rounded-xl bg-slate-900 border border-slate-800">
+            <h4 className="text-lg font-semibold text-white mb-4">Tech Stack</h4>
+            <div className="flex flex-wrap gap-2">
+              {[
+                "JavaScript (ES6+)", 
+                "React & Next.js", 
+                "Node.js", 
+                "Python", 
+                "Supabase", 
+                "PostgreSQL", 
+                "Tailwind CSS",
+                "Git & GitHub",
+                "Linux / Bash"
+              ].map((skill) => (
+                <span key={skill} className="px-3 py-1 text-xs rounded-full border border-slate-700 text-slate-300">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- FOOTER --- */}
+      <footer className="w-full max-w-5xl mt-24 border-t border-slate-800 pt-8 pb-12 flex flex-col md:flex-row justify-between items-center text-slate-500 text-sm">
+        <p>© {new Date().getFullYear()} Shafayatur Rahman. All rights reserved.</p>
+        <div className="flex space-x-6 mt-4 md:mt-0">
+          <a href="https://github.com/I-amAnonymous" target="_blank" className="hover:text-cyan-400 transition-colors">
+            GitHub
           </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+          <a href="https://linkedin.com/in/shafayatur" target="_blank" className="hover:text-cyan-400 transition-colors">
+            LinkedIn
+          </a>
+          <a href="mailto:shafayaturrahman1@gmail.com" className="hover:text-cyan-400 transition-colors">
+            Email
           </a>
         </div>
-      </main>
-    </div>
+      </footer>
+
+    </main>
   );
 }
