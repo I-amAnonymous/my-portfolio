@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { FaGithub, FaFacebookF, FaInstagram, FaWhatsapp, FaEnvelope } from "react-icons/fa6";
+import { FaGithub, FaFacebookF, FaInstagram, FaWhatsapp, FaEnvelope, FaLinkedin } from "react-icons/fa6";
 
 // --- 1. THE "HACKER" SCRAMBLE TEXT COMPONENT (Binary Edition) ---
 const ScrambleText = () => {
@@ -155,9 +155,9 @@ const socials = [
     hoverColor: "hover:bg-slate-700 hover:text-white hover:shadow-slate-500/30" 
   },
   { 
-    Icon: FaEnvelope, 
-    link: "mailto:shafayaturrahman1@gmail.com", 
-    hoverColor: "hover:bg-red-600 hover:text-white hover:shadow-red-500/30" 
+    Icon: FaLinkedin, 
+    link: "https://www.linkedin.com/in/shafayatur-rahman-999785287/", 
+    hoverColor: "hover:bg-cyan-600 hover:text-white hover:shadow-green-500/30" 
   },
   { 
     Icon: FaFacebookF, 
@@ -170,9 +170,9 @@ const socials = [
     hoverColor: "hover:bg-pink-600 hover:text-white hover:shadow-pink-500/30" 
   },
   { 
-    Icon: FaWhatsapp, 
-    link: "https://wa.me/YOUR_NUMBER", 
-    hoverColor: "hover:bg-green-600 hover:text-white hover:shadow-green-500/30" 
+    Icon: FaEnvelope, 
+    link: "mailto:shafayaturrahman1@gmail.com", 
+    hoverColor: "hover:bg-red-600 hover:text-white hover:shadow-red-500/30"
   },
 ];
 
