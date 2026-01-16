@@ -1,37 +1,54 @@
-# Portfolio - Shafayatur Rahman
+# 🔐 Cyber-Sec Portfolio & Admin Console
 
-A personal portfolio representing my journey as a **Computer Science Student** at **BRAC University**. 
-This site showcases my academic projects, full-stack applications, and research interests in system security and AI.
+![Next.js](https://img.shields.io/badge/Next.js-14-black) ![Supabase](https://img.shields.io/badge/Supabase-Database-green) ![Tailwind](https://img.shields.io/badge/Tailwind-CSS-blue) ![Status](https://img.shields.io/badge/Status-Live-success)
 
-**[Live Demo](https://shafayatur-portfolio.vercel.app)**
+A highly interactive, full-stack portfolio designed for a Cybersecurity and Computer Science student. This project goes beyond a static site, featuring a secure **Admin Control Center** that allows real-time updates to the portfolio content without touching the codebase.
 
-## 🚀 About the Project
+## ⚡ Live Demo
+**[View the Portfolio Live](https://shafayatur-portfolio.vercel.app/)**
 
-This portfolio is built to demonstrate modern web engineering principles. It goes beyond a static template by incorporating client-side logic for animations while maintaining server-side performance for SEO.
+---
+
+## 🚀 Key Features
+
+### 🎨 Frontend Experience
+* **Cybersecurity Theme:** Custom animations including binary text scrambling, orbiting scanners, and terminal-style typography.
+* **Interactive Mascot:** A "Cyber-Bear" login mascot that tracks cursor movement and reacts to password input privacy.
+* **Fully Responsive:** optimized layouts for mobile (stacked view) and desktop (split view).
+
+### 🛡️ Backend & Admin Panel
+* **Secure Authentication:** Powered by **Supabase Auth** to protect the dashboard.
+* **Dynamic Content Management:**
+    * **Live Text Editing:** Update Bio, Roles, and Name speed intervals instantly.
+    * **Project Manager:** Add, edit, or delete portfolio projects dynamically.
+    * **Image Editor:** Built-in cropping tool (zoom/pan) to upload perfectly circular profile pictures directly to Supabase Storage.
+* **Database Driven:** All content is fetched server-side from a PostgreSQL database.
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Framework:** [Next.js](https://nextjs.org/) (App Router)
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
-- **Animation:** React Hooks (Custom Scramble/Hacker Effect)
-- **Language:** TypeScript
-- **Deployment:** Vercel
+| Component | Technology |
+| :--- | :--- |
+| **Framework** | Next.js 14 (App Router) |
+| **Styling** | Tailwind CSS + Framer Motion |
+| **Backend** | Supabase (PostgreSQL) |
+| **Auth** | Supabase Auth |
+| **Storage** | Supabase Bucket (Image Hosting) |
+| **Image Process** | React Easy Crop + HTML5 Canvas |
+| **Deployment** | Vercel |
 
-## 📂 Featured Projects
+---
 
-1. **Jersey Shop E-Commerce** - A full-stack marketplace with Admin Dashboard (Next.js, Supabase).
-2. **Python HIDS** - A Host-based Intrusion Detection System using cryptographic hashing.
+## 📸 Screenshots
 
-## 🛠️ Getting Started Locally
+### 1. The Public Portfolio
+![alt text](image.png)
 
-1. **Clone the repository**
-   ```bash
-   git clone [https://github.com/I-amAnonymous/my-portfolio.git](https://github.com/I-amAnonymous/my-portfolio.git)
-   cd my-portfolio
-2. **Install Dependencies**
-   ```bash
-   npm install
+### 2. The Login Guard
+![alt text](image-2.png)
 
-4. **Run the development server**
-   ```bash
-   npm run dev
+### 3. The Admin Dashboard
+![alt text](image-1.png)
+
+---
