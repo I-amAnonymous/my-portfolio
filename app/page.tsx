@@ -2,13 +2,15 @@
 
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
+// --- NEW IMPORTS FOR ICONS ---
+import { FaGithub, FaFacebookF, FaInstagram, FaWhatsapp, FaEnvelope, FaLinkedin } from "react-icons/fa6";
 
 // --- 1. THE "HACKER" SCRAMBLE TEXT COMPONENT (Binary Edition) ---
 const ScrambleText = () => {
   const [text, setText] = useState("SHAFAYATUR RAHMAN");
   const TARGET_TEXT = "SHAFAYATUR RAHMAN";
   const CYCLES_PER_LETTER = 2;
-  const SHUFFLE_TIME = 60; // Slower shuffle (was 40)
+  const SHUFFLE_TIME = 60;
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -44,7 +46,7 @@ const ScrambleText = () => {
   );
 };
 
-// --- 2. SMOOTH CINEMATIC ROTATE COMPONENT (Slower & Smoother) ---
+// --- 2. SMOOTH CINEMATIC ROTATE COMPONENT ---
 const SmoothRotate = () => {
   const phrases = [
     "Computer Science Student",
@@ -58,19 +60,14 @@ const SmoothRotate = () => {
   const [animationClass, setAnimationClass] = useState("opacity-0 translate-y-4 blur-sm");
 
   useEffect(() => {
-    // 1. Trigger Entry Animation (Slide Up + Fade In)
     const entryTimer = setTimeout(() => {
       setAnimationClass("opacity-100 translate-y-0 blur-0");
     }, 100);
 
-    // 2. Trigger Exit Animation (Slide Up + Fade Out)
-    // STAY VISIBLE LONGER: Increased to 4000ms (4 seconds)
     const exitTimer = setTimeout(() => {
       setAnimationClass("opacity-0 -translate-y-4 blur-sm");
     }, 4000); 
 
-    // 3. Change Text & Reset Position
-    // CYCLE TOTAL TIME: Increased to 5000ms (5 seconds)
     const nextTimer = setTimeout(() => {
       setIndex((prev) => (prev + 1) % phrases.length);
       setAnimationClass("opacity-0 translate-y-4 blur-sm"); 
@@ -84,14 +81,13 @@ const SmoothRotate = () => {
   }, [index]);
 
   return (
-    // SLOWER MOVEMENT: changed duration-700 to duration-1000
     <span className={`inline-block transition-all duration-1000 ease-out transform ${animationClass} text-cyan-400 font-bold`}>
       {phrases[index]}
     </span>
   );
 };
 
-// --- 3. THE DATA ---
+// --- 3. DATA: PROJECTS & SOCIALS ---
 const projects = [
   {
     title: "Jersey Shop E-Commerce", 
@@ -104,6 +100,36 @@ const projects = [
     description: "A Host-based Intrusion Detection System (HIDS) that monitors file integrity in real-time. It detects unauthorized modifications to critical system files using cryptographic hashing.",
     techStack: ["Python", "Cybersecurity", "File Integrity", "Hashing"],
     link: "https://github.com/I-amAnonymous/python-hids-integrity",
+  },
+];
+
+// NEW: Social Media Data
+// IMPORTANT: Replace the '#' links with your actual profile URLs!
+const socials = [
+  { 
+    Icon: FaGithub, 
+    link: "https://github.com/I-amAnonymous", 
+    hoverColor: "hover:bg-slate-700 hover:text-white hover:shadow-slate-500/30" 
+  },
+  { 
+    Icon: FaLinkedin, 
+    link: "https://www.linkedin.com/in/shafayatur-rahman-999785287/", // <- Replace YOUR_NUMBER_HERE (e.g., 8801711...)
+    hoverColor: "hover:bg-cyan-600 hover:text-white hover:shadow-green-500/30"  
+  },
+  { 
+    Icon: FaFacebookF, 
+    link: "https://www.facebook.com/shafayatrafi.42069", // <- Replace with your FB link
+    hoverColor: "hover:bg-blue-600 hover:text-white hover:shadow-blue-500/30" 
+  },
+  { 
+    Icon: FaInstagram, 
+    link: "https://www.instagram.com/_shafayat__/", // <- Replace with your Insta link
+    hoverColor: "hover:bg-pink-600 hover:text-white hover:shadow-pink-500/30" 
+  },
+  { 
+    Icon: FaEnvelope, 
+    link: "mailto:shafayaturrahman1@gmail.com", 
+    hoverColor: "hover:bg-red-600 hover:text-white hover:shadow-red-500/30"
   },
 ];
 
@@ -150,31 +176,49 @@ export default function Home() {
           </div>
         </div>
         
-        {/* --- DYNAMIC PROFILE PICTURE SECTION --- */}
-        <div className="hidden lg:block relative lg:w-1/2 flex justify-end items-center">
+        {/* --- RIGHT SIDE: IMAGE & SOCIALS --- */}
+        <div className="hidden lg:flex relative lg:w-1/2 justify-end items-center flex-col mt-12 lg:mt-0">
            
-           {/* 1. Background Ambience */}
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-tr from-cyan-500/30 to-blue-500/30 blur-[60px] rounded-full"></div>
-           
-           {/* 2. The Outer GLOWING Scanner Ring */}
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full border-2 border-cyan-400/60 shadow-[0_0_20px_rgba(34,211,238,0.5)] animate-[spin_10s_linear_infinite]">
-              {/* The glowing dot on the ring */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-cyan-100 rounded-full shadow-[0_0_15px_4px_rgba(34,211,238,0.8)]"></div>
+           {/* Image Container Stack */}
+           <div className="relative w-[350px] h-[350px] flex items-center justify-center">
+             {/* 1. Background Ambience */}
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 blur-[70px] rounded-full"></div>
+             
+             {/* 2. The Outer GLOWING Scanner Ring */}
+             <div className="absolute w-[320px] h-[320px] rounded-full border-2 border-cyan-400/50 shadow-[0_0_25px_rgba(34,211,238,0.4)] animate-[spin_12s_linear_infinite]">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-cyan-100 rounded-full shadow-[0_0_20px_5px_rgba(34,211,238,0.7)]"></div>
+             </div>
+
+             {/* 3. The Inner Pulsing Ring */}
+             <div className="absolute w-[300px] h-[300px] rounded-full border border-blue-500/30 animate-pulse"></div>
+
+             {/* 4. The Actual Image */}
+             <div className="relative z-10 h-72 w-72 rounded-full border-4 border-slate-800 bg-slate-800 overflow-hidden shadow-2xl">
+               <Image 
+                 src="/profile.jpg" 
+                 alt="Shafayatur Rahman"
+                 fill
+                 className="object-cover"
+                 priority
+               />
+             </div>
            </div>
 
-           {/* 3. The Inner Pulsing Ring */}
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[290px] h-[290px] rounded-full border border-blue-500/30 animate-pulse"></div>
-
-           {/* 4. The Actual Image Container */}
-           <div className="relative z-10 mx-auto h-72 w-72 rounded-full border-4 border-slate-800 bg-slate-800 overflow-hidden shadow-2xl">
-             <Image 
-               src="/profile.jpg" 
-               alt="Shafayatur Rahman"
-               fill
-               className="object-cover"
-               priority
-             />
+           {/* --- NEW: SOCIAL MEDIA ICONS ROW --- */}
+           <div className="mt-8 flex items-center justify-center gap-4 relative z-20">
+             {socials.map((social, index) => (
+               <a 
+                 key={index}
+                 href={social.link}
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className={`p-3 rounded-full bg-slate-800/80 border border-slate-700 text-slate-400 transition-all duration-300 hover:scale-110 hover:shadow-lg ${social.hoverColor}`}
+               >
+                 <social.Icon className="w-5 h-5" />
+               </a>
+             ))}
            </div>
+
         </div>
 
       </div>
