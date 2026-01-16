@@ -43,7 +43,7 @@ A highly interactive, full-stack portfolio designed for a Cybersecurity and Comp
 ## 📸 Screenshots
 
 ### 1. The Public Portfolio
-![alt text](image.png)
+![alt text](image-3.png)
 
 ### 2. The Login Guard
 ![alt text](image-2.png)
