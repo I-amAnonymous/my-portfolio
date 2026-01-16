@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 
-// --- 1. THE "HACKER" SCRAMBLE TEXT COMPONENT (For Name) ---
+// --- 1. THE "HACKER" SCRAMBLE TEXT COMPONENT (Keep this, it's cool) ---
 const ScrambleText = () => {
   const [text, setText] = useState("SHAFAYATUR RAHMAN");
   const TARGET_TEXT = "SHAFAYATUR RAHMAN";
@@ -44,8 +44,8 @@ const ScrambleText = () => {
   );
 };
 
-// --- 2. THE TYPEWRITER COMPONENT (For Roles) ---
-const Typewriter = () => {
+// --- 2. NEW: SMOOTH CINEMATIC ROTATE COMPONENT ---
+const SmoothRotate = () => {
   const phrases = [
     "Computer Science Student",
     "Cybersecurity Enthusiast",
@@ -54,40 +54,36 @@ const Typewriter = () => {
     "Full Stack Developer"
   ];
   
-  const [text, setText] = useState("");
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [typingSpeed, setTypingSpeed] = useState(100);
+  const [index, setIndex] = useState(0);
+  const [animationClass, setAnimationClass] = useState("opacity-0 translate-y-4 blur-sm");
 
   useEffect(() => {
-    const handleTyping = () => {
-      const currentPhrase = phrases[phraseIndex];
-      
-      if (isDeleting) {
-        setText(currentPhrase.substring(0, text.length - 1));
-        setTypingSpeed(50); 
-      } else {
-        setText(currentPhrase.substring(0, text.length + 1));
-        setTypingSpeed(100); 
-      }
+    // 1. Trigger Entry Animation (Slide Up + Fade In)
+    const entryTimer = setTimeout(() => {
+      setAnimationClass("opacity-100 translate-y-0 blur-0");
+    }, 100);
 
-      if (!isDeleting && text === currentPhrase) {
-        setTimeout(() => setIsDeleting(true), 2000); 
-      } 
-      else if (isDeleting && text === "") {
-        setIsDeleting(false);
-        setPhraseIndex((prev) => (prev + 1) % phrases.length);
-      }
+    // 2. Trigger Exit Animation (Slide Up + Fade Out)
+    const exitTimer = setTimeout(() => {
+      setAnimationClass("opacity-0 -translate-y-4 blur-sm");
+    }, 2500); // Text stays visible for 2.5 seconds
+
+    // 3. Change Text & Reset Position
+    const nextTimer = setTimeout(() => {
+      setIndex((prev) => (prev + 1) % phrases.length);
+      setAnimationClass("opacity-0 translate-y-4 blur-sm"); // Reset to bottom
+    }, 3000); // Total cycle duration
+
+    return () => {
+      clearTimeout(entryTimer);
+      clearTimeout(exitTimer);
+      clearTimeout(nextTimer);
     };
-
-    const timer = setTimeout(handleTyping, typingSpeed);
-    return () => clearTimeout(timer);
-  }, [text, isDeleting, phraseIndex, typingSpeed, phrases]);
+  }, [index]);
 
   return (
-    <span className="text-cyan-400 font-bold tracking-wide">
-      {text}
-      <span className="animate-pulse text-white ml-1">|</span>
+    <span className={`inline-block transition-all duration-700 ease-out transform ${animationClass} text-cyan-400 font-bold`}>
+      {phrases[index]}
     </span>
   );
 };
@@ -129,7 +125,7 @@ export default function Home() {
           {/* DYNAMIC DESCRIPTION SECTION */}
           <div className="mb-8 text-lg text-slate-400 md:text-xl max-w-2xl min-h-[80px] flex flex-col justify-center lg:block">
             <p className="mt-2 leading-relaxed">
-               I am a <Typewriter />
+               I am a <SmoothRotate />
             </p>
           </div>
 
