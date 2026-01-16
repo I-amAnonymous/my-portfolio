@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { FaGithub, FaFacebookF, FaInstagram, FaWhatsapp, FaEnvelope, FaLinkedin } from "react-icons/fa6";
+import { FaGithub, FaFacebookF, FaInstagram, FaEnvelope, FaLinkedin } from "react-icons/fa6";
 
 // --- 1. THE "HACKER" SCRAMBLE TEXT COMPONENT (Binary Edition) ---
 const ScrambleText = () => {
