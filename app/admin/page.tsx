@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation"; 
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/lib/canvasUtils";
-import { FaUpload, FaCheck, FaTrash, FaPlus, FaLink, FaRightFromBracket, FaFilePdf } from "react-icons/fa6";
+import { FaUpload, FaCheck, FaTrash, FaPlus, FaLink, FaRightFromBracket, FaFilePdf, FaPencil } from "react-icons/fa6";
 
 type Project = {
   title: string;
@@ -27,7 +27,7 @@ export default function AdminPage() {
   const [nameSpeed, setNameSpeed] = useState(5000);
   const [roleSpeed, setRoleSpeed] = useState(4000);
   
-  // NEW: Resume State
+  // Resume State
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
 
@@ -35,6 +35,7 @@ export default function AdminPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [newProject, setNewProject] = useState({ title: "", description: "", tech: "", link: "" });
   const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null); // NEW: Track which project is being edited
 
   // Image States
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -62,7 +63,6 @@ export default function AdminPage() {
         setRoleSpeed(data.role_speed || 4000);
         if (data.avatar_url) setAvatarUrl(data.avatar_url);
         if (data.projects) setProjects(data.projects);
-        // NEW: Load Resume URL
         if (data.resume_url) setResumeUrl(data.resume_url);
       }
     };
@@ -112,15 +112,51 @@ export default function AdminPage() {
   };
 
   // --- PROJECT HANDLERS ---
-  const handleAddProject = () => {
+  
+  // 1. Prepare form for adding new
+  const openAddForm = () => {
+    setEditingIndex(null);
+    setNewProject({ title: "", description: "", tech: "", link: "" });
+    setIsProjectFormOpen(true);
+  };
+
+  // 2. Prepare form for editing existing
+  const handleEditProject = (index: number) => {
+    const project = projects[index];
+    setNewProject({
+      title: project.title,
+      description: project.description,
+      link: project.link,
+      tech: project.techStack.join(", ")
+    });
+    setEditingIndex(index);
+    setIsProjectFormOpen(true);
+    // Optional: scroll to form
+    window.scrollTo({ top: document.body.scrollHeight / 2, behavior: 'smooth' });
+  };
+
+  // 3. Save (Add or Update)
+  const handleSaveProject = () => {
     if (!newProject.title || !newProject.description) return alert("Title and Description are required!");
-    const projectToAdd: Project = {
+    
+    const projectData: Project = {
       title: newProject.title,
       description: newProject.description,
       link: newProject.link || "#",
       techStack: newProject.tech.split(",").map(t => t.trim()).filter(t => t !== "")
     };
-    setProjects([...projects, projectToAdd]);
+
+    if (editingIndex !== null) {
+      // UPDATE existing
+      const updatedProjects = [...projects];
+      updatedProjects[editingIndex] = projectData;
+      setProjects(updatedProjects);
+      setEditingIndex(null);
+    } else {
+      // ADD new
+      setProjects([...projects, projectData]);
+    }
+
     setNewProject({ title: "", description: "", tech: "", link: "" }); 
     setIsProjectFormOpen(false);
   };
@@ -140,7 +176,6 @@ export default function AdminPage() {
     let finalResumeUrl = resumeUrl;
 
     try {
-      // 1. Upload Avatar (if changed)
       if (croppedImageBlob) {
         const fileName = `avatar-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage.from('images').upload(fileName, croppedImageBlob);
@@ -149,7 +184,6 @@ export default function AdminPage() {
         finalAvatarUrl = urlData.publicUrl;
       }
 
-      // 2. Upload Resume (if changed)
       if (resumeFile) {
         const fileName = `resume-${Date.now()}.pdf`;
         const { error: uploadError } = await supabase.storage.from('images').upload(fileName, resumeFile);
@@ -165,7 +199,7 @@ export default function AdminPage() {
         name_speed: nameSpeed,
         role_speed: roleSpeed,
         avatar_url: finalAvatarUrl,
-        resume_url: finalResumeUrl, // Save new resume URL
+        resume_url: finalResumeUrl,
         projects: projects
       };
 
@@ -174,7 +208,7 @@ export default function AdminPage() {
         const { error } = await supabase.from('profile').update(updates).eq('id', profile.id);
         if (error) throw error;
         setMessage("✅ Everything updated successfully!");
-        setResumeFile(null); // Clear file input
+        setResumeFile(null);
       }
     } catch (error: any) {
       console.error(error);
@@ -224,9 +258,7 @@ export default function AdminPage() {
           </div>
           <div><label className="block text-sm font-medium text-slate-400 mb-2">About Me</label><textarea className="w-full h-32 bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-cyan-500" value={about} onChange={(e) => setAbout(e.target.value)} /></div>
           
-          {/* UPLOAD SECTION: IMAGE & RESUME */}
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Image Upload */}
             <div className="p-4 border border-dashed border-slate-700 rounded-lg bg-slate-950/50 flex items-center gap-4">
               <div className="w-12 h-12 rounded-full overflow-hidden border border-cyan-500/50 bg-slate-800 flex-shrink-0">
                  {previewUrl ? <img src={previewUrl} className="object-cover w-full h-full" /> : avatarUrl ? <img src={avatarUrl} className="object-cover w-full h-full" /> : null}
@@ -237,7 +269,6 @@ export default function AdminPage() {
               </label>
             </div>
 
-            {/* NEW: Resume Upload */}
             <div className="p-4 border border-dashed border-slate-700 rounded-lg bg-slate-950/50 flex flex-col justify-center">
               <label className="block text-xs font-medium text-slate-400 mb-2">Curriculum Vitae (PDF)</label>
               <div className="flex items-center gap-3">
@@ -255,19 +286,27 @@ export default function AdminPage() {
         <section className="space-y-6 border-t border-slate-800 pt-8">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-white">Projects Manager</h2>
-            <button onClick={() => setIsProjectFormOpen(!isProjectFormOpen)} className="flex items-center gap-2 text-sm bg-cyan-900/30 text-cyan-400 px-3 py-1 rounded hover:bg-cyan-900/50 transition-colors"><FaPlus /> Add New</button>
+            <button onClick={openAddForm} className="flex items-center gap-2 text-sm bg-cyan-900/30 text-cyan-400 px-3 py-1 rounded hover:bg-cyan-900/50 transition-colors"><FaPlus /> Add New</button>
           </div>
+          
           {isProjectFormOpen && (
             <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-4">
+              <div className="flex justify-between items-center mb-2">
+                 <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-wider">{editingIndex !== null ? "Editing Project" : "New Project"}</h3>
+                 <button onClick={() => setIsProjectFormOpen(false)} className="text-xs text-slate-500 hover:text-white">Cancel</button>
+              </div>
               <input placeholder="Project Title" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white" value={newProject.title} onChange={(e) => setNewProject({...newProject, title: e.target.value})} />
               <textarea placeholder="Description" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white h-20" value={newProject.description} onChange={(e) => setNewProject({...newProject, description: e.target.value})} />
               <div className="grid md:grid-cols-2 gap-4">
                 <input placeholder="Tech Stack (comma separated)" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white" value={newProject.tech} onChange={(e) => setNewProject({...newProject, tech: e.target.value})} />
                 <input placeholder="Project Link (URL)" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white" value={newProject.link} onChange={(e) => setNewProject({...newProject, link: e.target.value})} />
               </div>
-              <button onClick={handleAddProject} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded">Add to List</button>
+              <button onClick={handleSaveProject} className={`w-full font-bold py-2 rounded text-white ${editingIndex !== null ? "bg-amber-600 hover:bg-amber-500" : "bg-green-600 hover:bg-green-500"}`}>
+                {editingIndex !== null ? "Update Project" : "Add to List"}
+              </button>
             </div>
           )}
+
           <div className="space-y-3">
             {projects.map((project, index) => (
               <div key={index} className="flex justify-between items-start p-4 bg-slate-950 border border-slate-800 rounded-lg group hover:border-slate-700 transition-colors">
@@ -276,12 +315,16 @@ export default function AdminPage() {
                   <p className="text-sm text-slate-400 mt-1 line-clamp-1">{project.description}</p>
                   <div className="flex gap-2 mt-2">{project.techStack.map(t => <span key={t} className="text-[10px] bg-slate-900 text-slate-400 px-1 rounded border border-slate-800">{t}</span>)}</div>
                 </div>
-                <button onClick={() => handleDeleteProject(index)} className="text-slate-600 hover:text-red-500 transition-colors p-2"><FaTrash /></button>
+                <div className="flex gap-1">
+                  <button onClick={() => handleEditProject(index)} className="text-slate-600 hover:text-cyan-500 transition-colors p-2" title="Edit"><FaPencil /></button>
+                  <button onClick={() => handleDeleteProject(index)} className="text-slate-600 hover:text-red-500 transition-colors p-2" title="Delete"><FaTrash /></button>
+                </div>
               </div>
             ))}
             {projects.length === 0 && <p className="text-slate-600 text-sm text-center py-4">No projects added yet.</p>}
           </div>
         </section>
+
         {message && <div className={`p-3 rounded text-center font-bold ${message.includes('Error') ? 'bg-red-900/30 text-red-400' : 'bg-green-900/30 text-green-400'}`}>{message}</div>}
         <button onClick={handleUpdate} disabled={loading} className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${loading ? "bg-slate-700 text-slate-400" : "bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:shadow-cyan-500/25"}`}>{loading ? "Saving Everything..." : "Save All Changes"}</button>
       </div>
