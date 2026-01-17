@@ -3,14 +3,72 @@
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient"; 
-import { FaGithub, FaFacebookF, FaInstagram, FaEnvelope, FaLinkedin } from "react-icons/fa6";
+import { FaGithub, FaFacebookF, FaInstagram, FaEnvelope, FaLinkedin, FaFilePdf, FaChevronDown, FaEye, FaDownload } from "react-icons/fa6";
+
+// --- 0. UPDATED: CV DROPDOWN ---
+// Accepts 'resumeUrl' prop now!
+const CVDropdown = ({ resumeUrl }: { resumeUrl: string | null }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    if (!resumeUrl) {
+      e.preventDefault();
+      alert("No resume uploaded yet!");
+    }
+  };
+
+  return (
+    <div className="relative w-full sm:w-auto" ref={dropdownRef}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800/80 px-6 py-3 text-white font-medium hover:bg-slate-800 hover:border-cyan-500/50 hover:text-cyan-400 transition-all group shadow-lg shadow-black/20"
+      >
+        <FaFilePdf className="text-slate-400 group-hover:text-cyan-400 transition-colors" /> 
+        Resume 
+        <FaChevronDown className={`text-xs text-slate-500 group-hover:text-cyan-400 transition-all duration-300 ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      <div className={`absolute top-full left-0 mt-2 w-full sm:w-48 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden transition-all duration-200 z-50 origin-top ${isOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-2 pointer-events-none"}`}>
+        <a 
+          href={resumeUrl || "#"} 
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleLinkClick}
+          className="flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors border-b border-slate-800"
+        >
+          <FaEye /> View Online
+        </a>
+        <a 
+          href={resumeUrl || "#"} 
+          // If using Supabase, 'download' attribute might not force download on cross-origin, 
+          // but usually works. If not, users can just view and save.
+          target="_blank"
+          onClick={handleLinkClick}
+          className="flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors"
+        >
+          <FaDownload /> Download PDF
+        </a>
+      </div>
+    </div>
+  );
+};
 
 // --- 1. DYNAMIC SCRAMBLE TEXT ---
 const ScrambleText = ({ name, speed = 5000 }: { name: string, speed?: number }) => {
   const [text, setText] = useState(name);
   const CYCLES_PER_LETTER = 2;
   const FLIP_SPEED = 60; 
-  
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
     const animate = () => {
@@ -30,7 +88,6 @@ const ScrambleText = ({ name, speed = 5000 }: { name: string, speed?: number }) 
     intervalId = setInterval(() => animate(), speed);
     return () => clearInterval(intervalId);
   }, [name, speed]);
-
   return <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 font-mono break-words">{text}</span>;
 };
 
@@ -38,7 +95,6 @@ const ScrambleText = ({ name, speed = 5000 }: { name: string, speed?: number }) 
 const SmoothRotate = ({ words, speed = 4000 }: { words: string[], speed?: number }) => {
   const [index, setIndex] = useState(0);
   const [animationClass, setAnimationClass] = useState("opacity-0 translate-y-4 blur-sm");
-
   useEffect(() => {
     if (words.length === 0) return;
     const entryTimer = setTimeout(() => setAnimationClass("opacity-100 translate-y-0 blur-0"), 100);
@@ -47,10 +103,8 @@ const SmoothRotate = ({ words, speed = 4000 }: { words: string[], speed?: number
       setIndex((prev) => (prev + 1) % words.length);
       setAnimationClass("opacity-0 translate-y-4 blur-sm"); 
     }, speed + 1000); 
-
     return () => { clearTimeout(entryTimer); clearTimeout(exitTimer); clearTimeout(nextTimer); };
   }, [index, words, speed]);
-
   return <span className={`inline-block transition-all duration-1000 ease-out transform ${animationClass} text-cyan-400 font-bold`}>{words[index] || "Loading..."}</span>;
 };
 
@@ -58,7 +112,6 @@ const SmoothRotate = ({ words, speed = 4000 }: { words: string[], speed?: number
 const SkillBadge = ({ skill }: { skill: string }) => {
   const [displayText, setDisplayText] = useState(skill);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
   const handleMouseEnter = () => {
     let iteration = 0;
     clearInterval(intervalRef.current!);
@@ -71,16 +124,13 @@ const SkillBadge = ({ skill }: { skill: string }) => {
       iteration += 1 / 2;
     }, 30);
   };
-
   const handleMouseLeave = () => {
     clearInterval(intervalRef.current!);
     setDisplayText(skill);
   };
-
   return <span onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} className="px-3 py-1 text-xs font-mono rounded-full border border-slate-700 bg-slate-900/50 text-slate-300 cursor-pointer transition-all duration-300 hover:border-cyan-400 hover:text-cyan-400 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)] hover:bg-slate-800 select-none">{displayText}</span>;
 };
 
-// --- STATIC SOCIALS ---
 const socials = [
   { Icon: FaGithub, link: "https://github.com/I-amAnonymous", hoverColor: "hover:bg-slate-700 hover:text-white hover:shadow-slate-500/30" },
   { Icon: FaLinkedin, link: "https://www.linkedin.com/in/shafayatur-rahman-999785287/", hoverColor: "hover:bg-cyan-600 hover:text-white hover:shadow-cyan-500/30" },
@@ -97,7 +147,8 @@ export default function Home() {
     avatar_url: "/profile.jpg",
     name_speed: 5000,
     role_speed: 4000,
-    projects: [] as any[] // Default empty array for projects
+    projects: [] as any[],
+    resume_url: null // NEW FIELD
   });
 
   useEffect(() => {
@@ -111,7 +162,8 @@ export default function Home() {
           avatar_url: data.avatar_url || "/profile.jpg",
           name_speed: data.name_speed || 5000,
           role_speed: data.role_speed || 4000,
-          projects: data.projects || [] // Load projects from DB
+          projects: data.projects || [],
+          resume_url: data.resume_url || null // Load from DB
         });
       }
     };
@@ -132,9 +184,14 @@ export default function Home() {
           <div className="mb-8 text-base text-slate-400 md:text-xl max-w-2xl min-h-[60px] md:min-h-[80px] flex flex-col justify-center lg:block">
             <p className="mt-2 leading-relaxed">I am a <SmoothRotate words={profile.roles} speed={profile.role_speed} /></p>
           </div>
-          <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4 justify-center lg:justify-start w-full sm:w-auto">
-            <a href="#projects" className="w-full sm:w-auto text-center rounded-lg bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition-colors">View My Work</a>
-            <a href="https://github.com/I-amAnonymous" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto text-center rounded-lg border border-slate-700 bg-slate-800 px-6 py-3 text-white font-medium hover:bg-slate-700 transition-colors">GitHub Profile</a>
+          
+          <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4 justify-center lg:justify-start w-full sm:w-auto relative z-40">
+            <a href="#projects" className="w-full sm:w-auto text-center rounded-lg bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20">View My Work</a>
+            
+            {/* PASS DYNAMIC RESUME URL */}
+            <CVDropdown resumeUrl={profile.resume_url} />
+
+            <a href="https://github.com/I-amAnonymous" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto text-center rounded-lg border border-slate-700 bg-slate-800/50 px-6 py-3 text-white font-medium hover:bg-slate-700 transition-colors">GitHub</a>
           </div>
         </div>
         
@@ -186,11 +243,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- DYNAMIC PROJECTS SECTION --- */}
       <section id="projects" className="w-full max-w-5xl">
         <h2 className="mb-8 md:mb-12 text-2xl md:text-3xl font-bold text-white text-center md:text-left">Featured Projects</h2>
-        
-        {/* If no projects, show loading or placeholder */}
         {profile.projects.length === 0 ? (
           <p className="text-slate-500 text-center">Loading projects or none added yet...</p>
         ) : (

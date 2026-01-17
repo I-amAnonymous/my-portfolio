@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation"; // For redirecting
+import { useRouter } from "next/navigation"; 
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/lib/canvasUtils";
-// FIXED: Changed FaSignOutAlt to FaRightFromBracket
-import { FaUpload, FaCheck, FaTrash, FaPlus, FaLink, FaRightFromBracket } from "react-icons/fa6";
+import { FaUpload, FaCheck, FaTrash, FaPlus, FaLink, FaRightFromBracket, FaFilePdf } from "react-icons/fa6";
 
 type Project = {
   title: string;
@@ -17,7 +16,7 @@ type Project = {
 
 export default function AdminPage() {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Security State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   
@@ -27,6 +26,10 @@ export default function AdminPage() {
   const [about, setAbout] = useState("");
   const [nameSpeed, setNameSpeed] = useState(5000);
   const [roleSpeed, setRoleSpeed] = useState(4000);
+  
+  // NEW: Resume State
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
 
   // Project States
   const [projects, setProjects] = useState<Project[]>([]);
@@ -38,8 +41,6 @@ export default function AdminPage() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [croppedImageBlob, setCroppedImageBlob] = useState<Blob | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  
-  // Cropper States
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
@@ -48,19 +49,10 @@ export default function AdminPage() {
   // --- 1. SECURITY CHECK & DATA FETCH ---
   useEffect(() => {
     const checkAuthAndFetch = async () => {
-      // Check if user is logged in
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        // Not logged in? Kick them out!
-        router.push("/login");
-        return;
-      }
-
-      // If we get here, they are authorized
+      if (!user) { router.push("/login"); return; }
       setIsAuthenticated(true);
 
-      // Fetch Profile Data
       const { data } = await supabase.from('profile').select('*').limit(1).single();
       if (data) {
         setFullName(data.full_name || "");
@@ -70,18 +62,19 @@ export default function AdminPage() {
         setRoleSpeed(data.role_speed || 4000);
         if (data.avatar_url) setAvatarUrl(data.avatar_url);
         if (data.projects) setProjects(data.projects);
+        // NEW: Load Resume URL
+        if (data.resume_url) setResumeUrl(data.resume_url);
       }
     };
     checkAuthAndFetch();
   }, [router]);
 
-  // --- LOGOUT HANDLER ---
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push("/login");
   };
 
-  // --- IMAGE HANDLERS ---
+  // --- FILE HANDLERS ---
   const onFileChange = async (e: any) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -91,6 +84,12 @@ export default function AdminPage() {
         setIsCropperOpen(true);
       });
       reader.readAsDataURL(file);
+    }
+  };
+
+  const onResumeChange = (e: any) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setResumeFile(e.target.files[0]);
     }
   };
 
@@ -138,14 +137,25 @@ export default function AdminPage() {
     setLoading(true);
     setMessage("");
     let finalAvatarUrl = avatarUrl;
+    let finalResumeUrl = resumeUrl;
 
     try {
+      // 1. Upload Avatar (if changed)
       if (croppedImageBlob) {
         const fileName = `avatar-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage.from('images').upload(fileName, croppedImageBlob);
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from('images').getPublicUrl(fileName);
         finalAvatarUrl = urlData.publicUrl;
+      }
+
+      // 2. Upload Resume (if changed)
+      if (resumeFile) {
+        const fileName = `resume-${Date.now()}.pdf`;
+        const { error: uploadError } = await supabase.storage.from('images').upload(fileName, resumeFile);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('images').getPublicUrl(fileName);
+        finalResumeUrl = urlData.publicUrl;
       }
 
       const updates = {
@@ -155,6 +165,7 @@ export default function AdminPage() {
         name_speed: nameSpeed,
         role_speed: roleSpeed,
         avatar_url: finalAvatarUrl,
+        resume_url: finalResumeUrl, // Save new resume URL
         projects: projects
       };
 
@@ -162,7 +173,8 @@ export default function AdminPage() {
       if (profile) {
         const { error } = await supabase.from('profile').update(updates).eq('id', profile.id);
         if (error) throw error;
-        setMessage("✅ Profile & Projects updated successfully!");
+        setMessage("✅ Everything updated successfully!");
+        setResumeFile(null); // Clear file input
       }
     } catch (error: any) {
       console.error(error);
@@ -172,20 +184,16 @@ export default function AdminPage() {
     }
   };
 
-  // Prevent flashing content before redirect
   if (!isAuthenticated) return null;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 flex flex-col items-center font-sans relative">
       
-      {/* --- CROPPER MODAL --- */}
+      {/* CROPPER MODAL */}
       {isCropperOpen && imageSrc && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm p-4">
           <div className="relative w-full max-w-lg h-[400px] bg-slate-800 rounded-xl overflow-hidden border border-slate-700 shadow-2xl">
-            <Cropper
-              image={imageSrc} crop={crop} zoom={zoom} aspect={1} cropShape="round" showGrid={false}
-              onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom}
-            />
+            <Cropper image={imageSrc} crop={crop} zoom={zoom} aspect={1} cropShape="round" showGrid={false} onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom} />
           </div>
           <div className="w-full max-w-lg mt-6 bg-slate-900 p-4 rounded-xl border border-slate-800 flex flex-col gap-4">
             <input type="range" value={zoom} min={1} max={3} step={0.1} onChange={(e) => setZoom(Number(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
@@ -197,65 +205,58 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* --- MAIN FORM --- */}
+      {/* MAIN FORM */}
       <div className="w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-xl p-6 md:p-8 shadow-2xl space-y-8 relative">
-        
-        {/* Header with Logout */}
         <div className="flex justify-between items-center border-b border-slate-800 pb-4">
           <h1 className="text-2xl md:text-3xl font-bold text-cyan-400">Portfolio Control Center</h1>
-          <button onClick={handleLogout} className="text-xs flex items-center gap-2 text-slate-400 hover:text-red-400 transition-colors">
-            {/* FIXED: Using correct icon */}
-            <FaRightFromBracket /> Logout
-          </button>
+          <button onClick={handleLogout} className="text-xs flex items-center gap-2 text-slate-400 hover:text-red-400 transition-colors"><FaRightFromBracket /> Logout</button>
         </div>
 
-        {/* Profile Info Section */}
         <section className="space-y-6">
           <h2 className="text-xl font-semibold text-white">Profile Details</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Full Name</label>
-              <input className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-cyan-500" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Roles (Comma separated)</label>
-              <input className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-cyan-500" value={roles} onChange={(e) => setRoles(e.target.value)} />
-            </div>
+            <div><label className="block text-sm font-medium text-slate-400 mb-2">Full Name</label><input className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-cyan-500" value={fullName} onChange={(e) => setFullName(e.target.value)} /></div>
+            <div><label className="block text-sm font-medium text-slate-400 mb-2">Roles (Comma separated)</label><input className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-cyan-500" value={roles} onChange={(e) => setRoles(e.target.value)} /></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Name Interval (ms)</label>
-              <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white" value={nameSpeed} onChange={(e) => setNameSpeed(Number(e.target.value))} />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Role Duration (ms)</label>
-              <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white" value={roleSpeed} onChange={(e) => setRoleSpeed(Number(e.target.value))} />
-            </div>
+             <div><label className="block text-xs font-medium text-slate-400 mb-1">Name Interval (ms)</label><input type="number" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white" value={nameSpeed} onChange={(e) => setNameSpeed(Number(e.target.value))} /></div>
+             <div><label className="block text-xs font-medium text-slate-400 mb-1">Role Duration (ms)</label><input type="number" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white" value={roleSpeed} onChange={(e) => setRoleSpeed(Number(e.target.value))} /></div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-400 mb-2">About Me</label>
-            <textarea className="w-full h-32 bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-cyan-500" value={about} onChange={(e) => setAbout(e.target.value)} />
-          </div>
-          <div className="p-4 border border-dashed border-slate-700 rounded-lg bg-slate-950/50 flex items-center gap-6">
-            <div className="w-16 h-16 rounded-full overflow-hidden border border-cyan-500/50 bg-slate-800 flex-shrink-0">
-               {previewUrl ? <img src={previewUrl} className="object-cover w-full h-full" /> : avatarUrl ? <img src={avatarUrl} className="object-cover w-full h-full" /> : null}
+          <div><label className="block text-sm font-medium text-slate-400 mb-2">About Me</label><textarea className="w-full h-32 bg-slate-950 border border-slate-700 rounded-lg p-3 text-white outline-none focus:border-cyan-500" value={about} onChange={(e) => setAbout(e.target.value)} /></div>
+          
+          {/* UPLOAD SECTION: IMAGE & RESUME */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Image Upload */}
+            <div className="p-4 border border-dashed border-slate-700 rounded-lg bg-slate-950/50 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full overflow-hidden border border-cyan-500/50 bg-slate-800 flex-shrink-0">
+                 {previewUrl ? <img src={previewUrl} className="object-cover w-full h-full" /> : avatarUrl ? <img src={avatarUrl} className="object-cover w-full h-full" /> : null}
+              </div>
+              <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-slate-800 border border-slate-600 rounded text-xs text-slate-300 hover:text-white transition-all">
+                <FaUpload /> Update Photo
+                <input type="file" accept="image/*" onChange={onFileChange} className="hidden" />
+              </label>
             </div>
-            <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-300 hover:text-white transition-all">
-              <FaUpload /> Change Photo
-              <input type="file" accept="image/*" onChange={onFileChange} className="hidden" />
-            </label>
+
+            {/* NEW: Resume Upload */}
+            <div className="p-4 border border-dashed border-slate-700 rounded-lg bg-slate-950/50 flex flex-col justify-center">
+              <label className="block text-xs font-medium text-slate-400 mb-2">Curriculum Vitae (PDF)</label>
+              <div className="flex items-center gap-3">
+                 <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 bg-slate-800 border border-slate-600 rounded text-xs text-slate-300 hover:text-white transition-all">
+                  <FaFilePdf /> {resumeFile ? "File Selected" : "Upload New CV"}
+                  <input type="file" accept="application/pdf" onChange={onResumeChange} className="hidden" />
+                </label>
+                {resumeUrl && !resumeFile && <span className="text-xs text-green-400">Current CV Active</span>}
+                {resumeFile && <span className="text-xs text-cyan-400">Ready to upload</span>}
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* --- PROJECTS MANAGER --- */}
         <section className="space-y-6 border-t border-slate-800 pt-8">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-white">Projects Manager</h2>
-            <button onClick={() => setIsProjectFormOpen(!isProjectFormOpen)} className="flex items-center gap-2 text-sm bg-cyan-900/30 text-cyan-400 px-3 py-1 rounded hover:bg-cyan-900/50 transition-colors">
-              <FaPlus /> Add New
-            </button>
+            <button onClick={() => setIsProjectFormOpen(!isProjectFormOpen)} className="flex items-center gap-2 text-sm bg-cyan-900/30 text-cyan-400 px-3 py-1 rounded hover:bg-cyan-900/50 transition-colors"><FaPlus /> Add New</button>
           </div>
-
           {isProjectFormOpen && (
             <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-4">
               <input placeholder="Project Title" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white" value={newProject.title} onChange={(e) => setNewProject({...newProject, title: e.target.value})} />
@@ -267,7 +268,6 @@ export default function AdminPage() {
               <button onClick={handleAddProject} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded">Add to List</button>
             </div>
           )}
-
           <div className="space-y-3">
             {projects.map((project, index) => (
               <div key={index} className="flex justify-between items-start p-4 bg-slate-950 border border-slate-800 rounded-lg group hover:border-slate-700 transition-colors">
@@ -282,12 +282,8 @@ export default function AdminPage() {
             {projects.length === 0 && <p className="text-slate-600 text-sm text-center py-4">No projects added yet.</p>}
           </div>
         </section>
-
         {message && <div className={`p-3 rounded text-center font-bold ${message.includes('Error') ? 'bg-red-900/30 text-red-400' : 'bg-green-900/30 text-green-400'}`}>{message}</div>}
-
-        <button onClick={handleUpdate} disabled={loading} className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${loading ? "bg-slate-700 text-slate-400" : "bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:shadow-cyan-500/25"}`}>
-          {loading ? "Saving Everything..." : "Save All Changes"}
-        </button>
+        <button onClick={handleUpdate} disabled={loading} className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${loading ? "bg-slate-700 text-slate-400" : "bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:shadow-cyan-500/25"}`}>{loading ? "Saving Everything..." : "Save All Changes"}</button>
       </div>
     </div>
   );
