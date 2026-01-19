@@ -5,13 +5,19 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation"; 
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/lib/canvasUtils";
-import { FaUpload, FaCheck, FaTrash, FaPlus, FaLink, FaRightFromBracket, FaFilePdf, FaPencil } from "react-icons/fa6";
+// FIXED: Replaced FaSignOutAlt with FaRightFromBracket
+import { FaUpload, FaCheck, FaTrash, FaPlus, FaLink, FaRightFromBracket, FaFilePdf, FaPencil, FaGithub, FaLinkedin, FaFacebook, FaInstagram, FaEnvelope, FaTwitter, FaYoutube } from "react-icons/fa6";
 
 type Project = {
   title: string;
   description: string;
   techStack: string[];
   link: string;
+};
+
+type Social = {
+  platform: string;
+  url: string;
 };
 
 export default function AdminPage() {
@@ -35,7 +41,11 @@ export default function AdminPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [newProject, setNewProject] = useState({ title: "", description: "", tech: "", link: "" });
   const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null); // NEW: Track which project is being edited
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  // NEW: Social Links State
+  const [socials, setSocials] = useState<Social[]>([]);
+  const [newSocial, setNewSocial] = useState({ platform: "github", url: "" });
 
   // Image States
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -64,6 +74,7 @@ export default function AdminPage() {
         if (data.avatar_url) setAvatarUrl(data.avatar_url);
         if (data.projects) setProjects(data.projects);
         if (data.resume_url) setResumeUrl(data.resume_url);
+        if (data.social_links) setSocials(data.social_links);
       }
     };
     checkAuthAndFetch();
@@ -112,15 +123,12 @@ export default function AdminPage() {
   };
 
   // --- PROJECT HANDLERS ---
-  
-  // 1. Prepare form for adding new
   const openAddForm = () => {
     setEditingIndex(null);
     setNewProject({ title: "", description: "", tech: "", link: "" });
     setIsProjectFormOpen(true);
   };
 
-  // 2. Prepare form for editing existing
   const handleEditProject = (index: number) => {
     const project = projects[index];
     setNewProject({
@@ -131,32 +139,25 @@ export default function AdminPage() {
     });
     setEditingIndex(index);
     setIsProjectFormOpen(true);
-    // Optional: scroll to form
     window.scrollTo({ top: document.body.scrollHeight / 2, behavior: 'smooth' });
   };
 
-  // 3. Save (Add or Update)
   const handleSaveProject = () => {
     if (!newProject.title || !newProject.description) return alert("Title and Description are required!");
-    
     const projectData: Project = {
       title: newProject.title,
       description: newProject.description,
       link: newProject.link || "#",
       techStack: newProject.tech.split(",").map(t => t.trim()).filter(t => t !== "")
     };
-
     if (editingIndex !== null) {
-      // UPDATE existing
       const updatedProjects = [...projects];
       updatedProjects[editingIndex] = projectData;
       setProjects(updatedProjects);
       setEditingIndex(null);
     } else {
-      // ADD new
       setProjects([...projects, projectData]);
     }
-
     setNewProject({ title: "", description: "", tech: "", link: "" }); 
     setIsProjectFormOpen(false);
   };
@@ -166,6 +167,18 @@ export default function AdminPage() {
       const updatedProjects = projects.filter((_, i) => i !== index);
       setProjects(updatedProjects);
     }
+  };
+
+  // --- SOCIAL HANDLERS ---
+  const handleAddSocial = () => {
+    if (!newSocial.url) return alert("URL is required!");
+    setSocials([...socials, newSocial]);
+    setNewSocial({ platform: "github", url: "" });
+  };
+
+  const handleDeleteSocial = (index: number) => {
+    const updatedSocials = socials.filter((_, i) => i !== index);
+    setSocials(updatedSocials);
   };
 
   // --- SAVE ALL CHANGES ---
@@ -200,7 +213,8 @@ export default function AdminPage() {
         role_speed: roleSpeed,
         avatar_url: finalAvatarUrl,
         resume_url: finalResumeUrl,
-        projects: projects
+        projects: projects,
+        social_links: socials 
       };
 
       const { data: profile } = await supabase.from('profile').select('id').limit(1).single();
@@ -222,7 +236,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 flex flex-col items-center font-sans relative">
-      
       {/* CROPPER MODAL */}
       {isCropperOpen && imageSrc && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm p-4">
@@ -239,10 +252,10 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* MAIN FORM */}
       <div className="w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-xl p-6 md:p-8 shadow-2xl space-y-8 relative">
         <div className="flex justify-between items-center border-b border-slate-800 pb-4">
           <h1 className="text-2xl md:text-3xl font-bold text-cyan-400">Portfolio Control Center</h1>
+          {/* FIXED: Using correct icon */}
           <button onClick={handleLogout} className="text-xs flex items-center gap-2 text-slate-400 hover:text-red-400 transition-colors"><FaRightFromBracket /> Logout</button>
         </div>
 
@@ -283,12 +296,54 @@ export default function AdminPage() {
           </div>
         </section>
 
+        {/* --- SOCIAL MEDIA MANAGER --- */}
+        <section className="space-y-6 border-t border-slate-800 pt-8">
+           <h2 className="text-xl font-semibold text-white">Social Links</h2>
+           <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 space-y-4">
+             <div className="flex gap-2">
+               <select 
+                 className="bg-slate-950 border border-slate-700 rounded p-2 text-white outline-none"
+                 value={newSocial.platform}
+                 onChange={(e) => setNewSocial({...newSocial, platform: e.target.value})}
+               >
+                 <option value="github">GitHub</option>
+                 <option value="linkedin">LinkedIn</option>
+                 <option value="facebook">Facebook</option>
+                 <option value="instagram">Instagram</option>
+                 <option value="twitter">Twitter</option>
+                 <option value="youtube">YouTube</option>
+                 <option value="email">Email</option>
+               </select>
+               <input 
+                 placeholder="Profile URL (e.g. https://github.com/username)" 
+                 className="flex-1 bg-slate-950 border border-slate-700 rounded p-2 text-white"
+                 value={newSocial.url}
+                 onChange={(e) => setNewSocial({...newSocial, url: e.target.value})}
+               />
+               <button onClick={handleAddSocial} className="bg-cyan-600 hover:bg-cyan-500 text-white p-2 rounded"><FaPlus /></button>
+             </div>
+             
+             {/* List */}
+             <div className="space-y-2">
+               {socials.map((social, index) => (
+                 <div key={index} className="flex justify-between items-center bg-slate-950 border border-slate-800 p-3 rounded">
+                   <div className="flex items-center gap-3">
+                     <span className="capitalize text-cyan-400 font-bold w-20">{social.platform}</span>
+                     <span className="text-xs text-slate-400 truncate max-w-[200px]">{social.url}</span>
+                   </div>
+                   <button onClick={() => handleDeleteSocial(index)} className="text-slate-500 hover:text-red-500"><FaTrash /></button>
+                 </div>
+               ))}
+               {socials.length === 0 && <p className="text-slate-600 text-sm text-center">No social links added.</p>}
+             </div>
+           </div>
+        </section>
+
         <section className="space-y-6 border-t border-slate-800 pt-8">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-white">Projects Manager</h2>
             <button onClick={openAddForm} className="flex items-center gap-2 text-sm bg-cyan-900/30 text-cyan-400 px-3 py-1 rounded hover:bg-cyan-900/50 transition-colors"><FaPlus /> Add New</button>
           </div>
-          
           {isProjectFormOpen && (
             <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-4">
               <div className="flex justify-between items-center mb-2">
@@ -306,7 +361,6 @@ export default function AdminPage() {
               </button>
             </div>
           )}
-
           <div className="space-y-3">
             {projects.map((project, index) => (
               <div key={index} className="flex justify-between items-start p-4 bg-slate-950 border border-slate-800 rounded-lg group hover:border-slate-700 transition-colors">
