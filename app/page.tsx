@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient"; 
-// Verified: All icons here exist in react-icons/fa6
 import { FaGithub, FaFacebookF, FaInstagram, FaEnvelope, FaLinkedin, FaFilePdf, FaChevronDown, FaEye, FaDownload, FaTwitter, FaYoutube, FaLink } from "react-icons/fa6";
 
 const CVDropdown = ({ resumeUrl }: { resumeUrl: string | null }) => {
@@ -119,37 +118,56 @@ const SocialIcon = ({ platform, link }: { platform: string, link: string }) => {
 };
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState(true); // NEW: Loading State
   const [profile, setProfile] = useState({
-    full_name: "SHAFAYATUR RAHMAN",
-    roles: ["Computer Science Student", "Cybersecurity Enthusiast"],
-    about_text: "Loading bio...", 
-    avatar_url: "/profile.jpg",
+    full_name: "",
+    roles: [],
+    about_text: "", 
+    avatar_url: "",
     name_speed: 5000,
     role_speed: 4000,
     projects: [] as any[],
     resume_url: null,
-    social_links: [] as any[] // NEW
+    social_links: [] as any[]
   });
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data } = await supabase.from('profile').select('*').limit(1).single();
-      if (data) {
-        setProfile({
-          full_name: data.full_name || "SHAFAYATUR RAHMAN",
-          roles: data.roles || ["Computer Science Student"],
-          about_text: data.about_text || "I am a CS Student...",
-          avatar_url: data.avatar_url || "/profile.jpg",
-          name_speed: data.name_speed || 5000,
-          role_speed: data.role_speed || 4000,
-          projects: data.projects || [],
-          resume_url: data.resume_url || null,
-          social_links: data.social_links || [] // Load Socials
-        });
+      try {
+        const { data } = await supabase.from('profile').select('*').limit(1).single();
+        if (data) {
+          setProfile({
+            full_name: data.full_name || "SHAFAYATUR RAHMAN",
+            roles: data.roles || ["Computer Science Student"],
+            about_text: data.about_text || "I am a CS Student...",
+            avatar_url: data.avatar_url || "/profile.jpg",
+            name_speed: data.name_speed || 5000,
+            role_speed: data.role_speed || 4000,
+            projects: data.projects || [],
+            resume_url: data.resume_url || null,
+            social_links: data.social_links || []
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setIsLoading(false); // NEW: Stop loading when done
       }
     };
     fetchProfile();
   }, []);
+
+  // NEW: Cyber-Themed Loading Screen
+  if (isLoading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#0f172a] text-cyan-400 font-mono">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin"></div>
+          <div className="animate-pulse tracking-widest text-sm">INITIALIZING SYSTEM...</div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-[100dvh] flex-col items-center p-6 md:p-24 bg-[#0f172a] overflow-x-hidden">
@@ -180,11 +198,15 @@ export default function Home() {
              </div>
              <div className="absolute w-[230px] h-[230px] sm:w-[290px] sm:h-[290px] rounded-full border border-blue-500/30 animate-pulse"></div>
              <div className="relative z-10 w-56 h-56 sm:w-72 sm:h-72 rounded-full border-4 border-slate-800 bg-slate-800 overflow-hidden shadow-2xl">
-               <Image src={profile.avatar_url} alt={profile.full_name} fill className="object-cover" priority />
+               {/* NEW: Only render Image if url is valid, else show skeleton */}
+               {profile.avatar_url ? (
+                 <Image src={profile.avatar_url} alt={profile.full_name} fill className="object-cover" priority />
+               ) : (
+                 <div className="w-full h-full bg-slate-800 animate-pulse" />
+               )}
              </div>
            </div>
            
-           {/* DYNAMIC SOCIAL ICONS */}
            <div className="mt-8 flex items-center justify-center gap-3 sm:gap-4 relative z-20 flex-wrap">
              {profile.social_links.length > 0 ? (
                profile.social_links.map((social: any, index: number) => (
